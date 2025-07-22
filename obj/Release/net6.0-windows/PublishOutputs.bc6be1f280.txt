@@ -1,0 +1,6 @@
+E:\MY_PROJECTS\taskbar-killer\bin\TaskbarAutoHideOnResume.exe
+E:\MY_PROJECTS\taskbar-killer\bin\icon\taskbar.png
+E:\MY_PROJECTS\taskbar-killer\bin\TaskbarAutoHideOnResume.dll
+E:\MY_PROJECTS\taskbar-killer\bin\TaskbarAutoHideOnResume.deps.json
+E:\MY_PROJECTS\taskbar-killer\bin\TaskbarAutoHideOnResume.runtimeconfig.json
+E:\MY_PROJECTS\taskbar-killer\bin\TaskbarAutoHideOnResume.pdb
