@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>TaskbarAutoHideOnResume</RootNamespace>
+    <AssemblyName>TaskbarAutoHideOnResume</AssemblyName>
+    
+    <!-- License and Package Information -->
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://hallhome.us/taskbar</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/N6REJ/Taskbar-Killer</RepositoryUrl>
+    <Copyright>Copyright (c) 2024 Taskbar Killer</Copyright>
+    <Description>A lightweight Windows utility that automatically manages taskbar auto-hide functionality</Description>
+    <Product>Taskbar Killer</Product>
+    <Company>Taskbar Killer</Company>
+    <Authors>Taskbar Killer</Authors>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Update="icon\taskbar.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="icon\taskbar-up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="icon\taskbar-down.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Update="README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

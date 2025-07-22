@@ -1,0 +1,14 @@
+# Global code owners
+* @N6REJ
+
+# Specific file patterns
+*.md @N6REJ
+*.yml @N6REJ
+*.yaml @N6REJ
+*.json @N6REJ
+*.cs @N6REJ
+*.csproj @N6REJ
+*.sln @N6REJ
+
+# GitHub specific files
+.github/ @N6REJ
