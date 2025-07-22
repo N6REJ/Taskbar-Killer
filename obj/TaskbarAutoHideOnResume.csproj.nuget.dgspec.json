@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar killer\\TaskbarAutoHideOnResume.csproj": {}
+    "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj": {}
   },
   "projects": {
-    "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar killer\\TaskbarAutoHideOnResume.csproj": {
+    "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar killer\\TaskbarAutoHideOnResume.csproj",
+        "projectUniqueName": "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj",
         "projectName": "TaskbarAutoHideOnResume",
-        "projectPath": "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar killer\\TaskbarAutoHideOnResume.csproj",
+        "projectPath": "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj",
         "packagesPath": "C:\\Users\\troy\\.nuget\\packages\\",
-        "outputPath": "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar killer\\obj\\",
+        "outputPath": "E:\\MY_PROJECTS\\taskbar-killer\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
