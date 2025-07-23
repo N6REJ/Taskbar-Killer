@@ -13,8 +13,8 @@ namespace TaskbarAutoHideOnResume
         private bool autoHideEnabled;
         private Icon taskbarUpIcon;
         private Icon taskbarDownIcon;
-        private string taskbarUpPath = "icon/taskbar-up.png";
-        private string taskbarDownPath = "icon/taskbar-down.png";
+        private string taskbarUpPath = "icons/taskbar-up.png";
+        private string taskbarDownPath = "icons/taskbar-down.png";
 
         public Form1()
         {
@@ -94,23 +94,31 @@ namespace TaskbarAutoHideOnResume
 
         private bool SetTaskbarAutoHide(bool enable)
         {
-            var key = Registry.CurrentUser.OpenSubKey(
-                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects3", true);
-            if (key != null)
+            try
             {
-                byte[] value = (byte[])key.GetValue("Settings");
-                if (value != null && value.Length >= 9)
+                using (var key = Registry.CurrentUser.OpenSubKey(
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects3", true))
                 {
-                    if (enable)
-                        value[8] |= 0x08;
-                    else
-                        value[8] &= unchecked((byte)~0x08);
-                    key.SetValue("Settings", value, RegistryValueKind.Binary);
-                    key.Close();
-                    ApplyTaskbarAutoHide(enable);
-                    return true;
+                    if (key != null)
+                    {
+                        byte[] value = (byte[])key.GetValue("Settings");
+                        if (value != null && value.Length >= 9)
+                        {
+                            if (enable)
+                                value[8] |= 0x08;
+                            else
+                                value[8] &= unchecked((byte)~0x08);
+                            key.SetValue("Settings", value, RegistryValueKind.Binary);
+                            ApplyTaskbarAutoHide(enable);
+                            return true;
+                        }
+                    }
                 }
-                key.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error accessing registry: {ex.Message}", "Registry Error", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             return false;
         }
@@ -149,16 +157,24 @@ namespace TaskbarAutoHideOnResume
 
         private bool GetTaskbarAutoHide()
         {
-            var key = Registry.CurrentUser.OpenSubKey(
-                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects3", false);
-            if (key != null)
+            try
             {
-                byte[] value = (byte[])key.GetValue("Settings");
-                key.Close();
-                if (value != null && value.Length >= 9)
+                using (var key = Registry.CurrentUser.OpenSubKey(
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects3", false))
                 {
-                    return (value[8] & 0x08) != 0;
+                    if (key != null)
+                    {
+                        byte[] value = (byte[])key.GetValue("Settings");
+                        if (value != null && value.Length >= 9)
+                        {
+                            return (value[8] & 0x08) != 0;
+                        }
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                // Silently fail and return default state
             }
             return false;
         }
@@ -196,6 +212,8 @@ namespace TaskbarAutoHideOnResume
                     // Convert bitmap to icon
                     IntPtr hIcon = bmp.GetHicon();
                     Icon icon = Icon.FromHandle(hIcon);
+                    // Note: Icon.FromHandle creates a copy, so we need to destroy the original handle
+                    DestroyIcon(hIcon);
                     return icon;
                 }
             }
@@ -205,6 +223,9 @@ namespace TaskbarAutoHideOnResume
                 return SystemIcons.Application;
             }
         }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool DestroyIcon(IntPtr hIcon);
         // Call this method to create a startup shortcut
         private void CreateStartupShortcut()
         {

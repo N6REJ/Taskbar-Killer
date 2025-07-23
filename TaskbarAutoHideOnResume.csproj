@@ -21,13 +21,10 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <None Update="icon\taskbar.png">
+    <None Update="icons\taskbar-up.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="icon\taskbar-up.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="icon\taskbar-down.png">
+    <None Update="icons\taskbar-down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="LICENSE">
