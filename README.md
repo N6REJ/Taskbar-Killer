@@ -1,10 +1,13 @@
 # Taskbar Killer
 
-A lightweight Windows utility that automatically manages taskbar auto-hide functionality, particularly useful for maintaining taskbar settings after system resume or session unlock events.
+A comprehensive Windows utility that automatically manages taskbar auto-hide functionality and resolves dual monitor taskbar conflicts, particularly useful for maintaining taskbar settings after system resume, session unlock events, and display configuration changes.
 
 ## Features
 
 - **Automatic Taskbar Management**: Automatically re-enables taskbar auto-hide after Windows resume or unlock events
+- **Dual Monitor Support**: Handles taskbar conflicts when switching between TV and monitor modes on dual monitor setups
+- **Taskbar Conflict Resolution**: Automatically detects and resolves "can't have 2 taskbars" popup errors
+- **Display Change Monitoring**: Monitors display configuration changes and automatically fixes taskbar issues
 - **System Tray Integration**: Runs quietly in the system tray with intuitive visual indicators
 - **Visual Status Icons**: 
   - `taskbar-up.png` - Displayed when taskbar auto-hide is disabled (normal state)
@@ -15,12 +18,19 @@ A lightweight Windows utility that automatically manages taskbar auto-hide funct
 
 ## How It Works
 
-Windows sometimes resets the taskbar auto-hide setting after:
+Windows sometimes resets the taskbar auto-hide setting and creates taskbar conflicts after:
 - System resume from sleep/hibernation
 - User session unlock
-- Certain system events
+- Display configuration changes (especially with dual monitors)
+- TV/Monitor mode switching on displays that support both modes
+- Monitor disconnect/reconnect events
 
-Taskbar Killer monitors these events and automatically restores your preferred auto-hide setting, ensuring your taskbar stays hidden when you want it to be.
+Taskbar Killer monitors these events and automatically:
+- Restores your preferred auto-hide setting
+- Closes "can't have 2 taskbars" error popups
+- Resets conflicting taskbar registry entries
+- Refreshes all taskbar instances across multiple monitors
+- Ensures taskbar functionality remains consistent across display changes
 
 ## Installation
 
