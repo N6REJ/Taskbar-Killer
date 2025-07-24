@@ -4,21 +4,32 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>TaskbarAutoHideOnResume</RootNamespace>
-    <AssemblyName>TaskbarAutoHideOnResume</AssemblyName>
+    <AssemblyName>Taskbar Killer</AssemblyName>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     
     <!-- License and Package Information -->
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://hallhome.us/taskbar</PackageProjectUrl>
     <RepositoryUrl>https://github.com/N6REJ/Taskbar-Killer</RepositoryUrl>
-    <Copyright>Copyright (c) 2024 Taskbar Killer</Copyright>
+    <Copyright>Copyright (c) 2025 Taskbar Killer</Copyright>
     <Description>A lightweight Windows utility that automatically manages taskbar auto-hide functionality</Description>
     <Product>Taskbar Killer</Product>
-    <Company>Taskbar Killer</Company>
-    <Authors>Taskbar Killer</Authors>
+    <Company>N6REJ</Company>
+    <Authors>Troy Hall</Authors>
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
+    <ApplicationIcon>icons\taskbar.ico</ApplicationIcon>
+    <PackageIcon>taskbar-down.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="icons\taskbar.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   
   <ItemGroup>
     <None Update="icons\taskbar-up.png">
@@ -26,6 +37,8 @@
     </None>
     <None Update="icons\taskbar-down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
     </None>
     <None Update="LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -34,6 +47,8 @@
     </None>
     <None Update="README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 </Project>

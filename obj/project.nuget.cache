@@ -1,8 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "5BWN2JlYomU=",
+  "dgSpecHash": "I1zMCVw/CkU=",
   "success": true,
-  "projectFilePath": "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar Killer.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\troy\\.nuget\\packages\\microsoft.net.illink.analyzers\\7.0.100-1.23211.1\\microsoft.net.illink.analyzers.7.0.100-1.23211.1.nupkg.sha512",
+    "C:\\Users\\troy\\.nuget\\packages\\microsoft.net.illink.tasks\\7.0.100-1.23211.1\\microsoft.net.illink.tasks.7.0.100-1.23211.1.nupkg.sha512",
+    "C:\\Users\\troy\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\6.0.36\\microsoft.aspnetcore.app.runtime.win-x64.6.0.36.nupkg.sha512",
+    "C:\\Users\\troy\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\6.0.36\\microsoft.windowsdesktop.app.runtime.win-x64.6.0.36.nupkg.sha512",
+    "C:\\Users\\troy\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\6.0.36\\microsoft.netcore.app.runtime.win-x64.6.0.36.nupkg.sha512"
+  ],
   "logs": []
 }

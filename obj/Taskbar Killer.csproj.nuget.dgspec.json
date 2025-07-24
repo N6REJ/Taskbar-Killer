@@ -1,15 +1,15 @@
 {
   "format": 1,
   "restore": {
-    "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj": {}
+    "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar Killer.csproj": {}
   },
   "projects": {
-    "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj": {
+    "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar Killer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj",
+        "projectUniqueName": "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar Killer.csproj",
         "projectName": "Taskbar Killer",
-        "projectPath": "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj",
+        "projectPath": "E:\\MY_PROJECTS\\taskbar-killer\\Taskbar Killer.csproj",
         "packagesPath": "C:\\Users\\troy\\.nuget\\packages\\",
         "outputPath": "E:\\MY_PROJECTS\\taskbar-killer\\obj\\",
         "projectStyle": "PackageReference",
@@ -74,6 +74,20 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[6.0.36, 6.0.36]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Runtime.win-x64",
+              "version": "[6.0.36, 6.0.36]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+              "version": "[6.0.36, 6.0.36]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
