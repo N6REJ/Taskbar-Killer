@@ -1,0 +1,390 @@
+<h1>Taskbar Killer - Automatic Taskbar Management for Windows</h1>
+
+<p class="lead">A comprehensive Windows utility that automatically manages taskbar auto-hide functionality and resolves dual monitor taskbar conflicts. Perfect for maintaining consistent taskbar settings after system resume, session unlock events, and display configuration changes.</p>
+
+<div class="alert alert-info">
+<h4><i class="fas fa-download"></i> Quick Download</h4>
+<p> <strong>License:</strong> MIT (Free)</p>
+<p><a href="https://github.com/N6REJ/Taskbar-Killer/releases/latest" class="btn btn-primary btn-lg" target="_blank"><i class="fas fa-download"></i> Download Taskbar Killer</a></p>
+</div>
+
+<script>
+// Set fallback values immediately
+document.addEventListener('DOMContentLoaded', function() {
+  const versionElement = document.getElementById('release-version');
+  const sizeElement = document.getElementById('release-size');
+  
+  // Set initial fallback values
+  if (versionElement && versionElement.textContent === 'Loading...') {
+    versionElement.textContent = 'v1.0.0';
+  }
+  if (sizeElement && sizeElement.textContent === 'Loading...') {
+    sizeElement.textContent = '~1.1mb';
+  }
+  
+  // Try multiple approaches to get version and release info
+  tryGetReleaseInfo();
+});
+
+async function tryGetReleaseInfo() {
+  const versionElement = document.getElementById('release-version');
+  const sizeElement = document.getElementById('release-size');
+  
+  try {
+    // First try: Get latest release
+    const releaseResponse = await fetchWithTimeout('https://api.github.com/repos/N6REJ/Taskbar-Killer/releases/latest', 5000);
+    
+    if (releaseResponse.ok) {
+      const releaseData = await releaseResponse.json();
+      console.log('GitHub Release API response:', releaseData);
+      
+      // Update version number
+      if (versionElement && releaseData.tag_name) {
+        versionElement.textContent = releaseData.tag_name;
+      }
+      
+      // Find the main installer asset and get its size
+      if (sizeElement && releaseData.assets && releaseData.assets.length > 0) {
+        const mainAsset = releaseData.assets.find(asset => 
+          asset.name.toLowerCase().includes('installer') || 
+          asset.name.toLowerCase().includes('.msi') ||
+          asset.name.toLowerCase().includes('taskbar')
+        ) || releaseData.assets[0];
+        
+        if (mainAsset && mainAsset.size) {
+          const sizeText = formatFileSize(mainAsset.size);
+          sizeElement.textContent = sizeText;
+          updateSizeReferences(sizeText);
+        }
+      }
+      return; // Success, exit early
+    }
+  } catch (error) {
+    console.log('Release API failed:', error.message);
+  }
+  
+  try {
+    // Second try: Get repository tags if no releases
+    const tagsResponse = await fetchWithTimeout('https://api.github.com/repos/N6REJ/Taskbar-Killer/tags', 5000);
+    
+    if (tagsResponse.ok) {
+      const tagsData = await tagsResponse.json();
+      console.log('GitHub Tags API response:', tagsData);
+      
+      if (tagsData && tagsData.length > 0 && versionElement) {
+        // Use the first (latest) tag
+        versionElement.textContent = tagsData[0].name;
+        return; // Success, exit early
+      }
+    }
+  } catch (error) {
+    console.log('Tags API failed:', error.message);
+  }
+  
+  try {
+    // Third try: Get repository info and check for version in package files
+    const repoResponse = await fetchWithTimeout('https://api.github.com/repos/N6REJ/Taskbar-Killer', 5000);
+    
+    if (repoResponse.ok) {
+      const repoData = await repoResponse.json();
+      console.log('GitHub Repo API response:', repoData);
+      
+      // Try to get project file content for version
+      const projectFileResponse = await fetchWithTimeout('https://api.github.com/repos/N6REJ/Taskbar-Killer/contents/Taskbar%20Killer.csproj', 5000);
+      
+      if (projectFileResponse.ok) {
+        const projectFileData = await projectFileResponse.json();
+        const content = atob(projectFileData.content);
+        
+        // Extract version from project file
+        const versionMatch = content.match(/<Version>(.*?)<\/Version>/);
+        if (versionMatch && versionElement) {
+          versionElement.textContent = 'v' + versionMatch[1];
+        }
+      }
+    }
+  } catch (error) {
+    console.log('Repository API failed:', error.message);
+  }
+  
+  console.log('All API attempts failed, using fallback values');
+}
+
+function fetchWithTimeout(url, timeout) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  return fetch(url, {
+    signal: controller.signal,
+    headers: {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'Taskbar-Killer-Website'
+    }
+  }).finally(() => {
+    clearTimeout(timeoutId);
+  });
+}
+
+function formatFileSize(bytes) {
+  const sizeInMB = (bytes / (1024 * 1024)).toFixed(1);
+  const sizeInKB = Math.round(bytes / 1024);
+  
+  // Show appropriate unit based on size
+  if (sizeInMB >= 1) {
+    return sizeInMB + ' MB';
+  } else {
+    return sizeInKB + ' KB';
+  }
+}
+
+function updateSizeReferences(sizeText) {
+  // Update storage requirement
+  const storageElement = document.getElementById('storage-requirement');
+  if (storageElement) {
+    storageElement.textContent = sizeText;
+  }
+  
+  // Update technical size
+  const techSizeElement = document.getElementById('tech-size');
+  if (techSizeElement) {
+    techSizeElement.textContent = sizeText;
+  }
+}
+</script>
+
+<h2><i class="fas fa-star"></i> Key Features</h2>
+
+<div class="row">
+<div class="col-md-6">
+<h4><i class="fas fa-magic"></i> Automatic Management</h4>
+<ul>
+<li>Automatically re-enables taskbar auto-hide after Windows resume or unlock events</li>
+<li>Monitors system power and session events in real-time</li>
+<li>Restores your preferred settings without manual intervention</li>
+</ul>
+
+<h4><i class="fas fa-desktop"></i> Dual Monitor Support</h4>
+<ul>
+<li>Handles taskbar conflicts when switching between TV and monitor modes</li>
+<li>Automatically detects and resolves "can't have 2 taskbars" popup errors</li>
+<li>Refreshes all taskbar instances across multiple monitors</li>
+</ul>
+</div>
+
+<div class="col-md-6">
+<h4><i class="fas fa-tray-arrow"></i> System Tray Integration</h4>
+<ul>
+<li>Runs quietly in the system tray with intuitive visual indicators</li>
+<li>Easy toggle with left-click or double-click</li>
+<li>Right-click context menu for advanced options</li>
+</ul>
+
+<h4><i class="fas fa-feather-alt"></i> Lightweight Design</h4>
+<ul>
+<li>Ultra-lightweight executable</li>
+<li>Minimal resource usage and system impact</li>
+<li>Built-in startup management options</li>
+</ul>
+</div>
+</div>
+
+<h2><i class="fas fa-question-circle"></i> Why Do You Need This?</h2>
+
+<p>Windows has a frustrating habit of resetting the taskbar auto-hide setting and creating taskbar conflicts in several scenarios:</p>
+
+<div class="alert alert-warning">
+<h5><i class="fas fa-exclamation-triangle"></i> Common Windows Issues:</h5>
+<ul>
+<li><strong>System resume</strong> from sleep/hibernation</li>
+<li><strong>User session unlock</strong> after being away</li>
+<li><strong>Display configuration changes</strong> (especially with dual monitors)</li>
+<li><strong>TV/Monitor mode switching</strong> on displays that support both modes</li>
+<li><strong>Monitor disconnect/reconnect</strong> events</li>
+</ul>
+</div>
+
+<p><strong>Taskbar Killer automatically handles all of these scenarios</strong>, ensuring your taskbar stays exactly how you want it - hidden until you need it.</p>
+
+<h2><i class="fas fa-cogs"></i> How It Works</h2>
+
+<p>Taskbar Killer runs silently in the background and monitors Windows events. When it detects a situation that might affect your taskbar settings, it automatically:</p>
+
+<ol>
+<li><strong>Restores your preferred auto-hide setting</strong></li>
+<li><strong>Closes "can't have 2 taskbars" error popups</strong></li>
+<li><strong>Resets conflicting taskbar registry entries</strong></li>
+<li><strong>Refreshes all taskbar instances</strong> across multiple monitors</li>
+<li><strong>Ensures taskbar functionality remains consistent</strong> across display changes</li>
+</ol>
+
+<h2><i class="fas fa-play-circle"></i> Getting Started</h2>
+
+<h3>Installation</h3>
+<ol>
+<li><a href="https://github.com/N6REJ/Taskbar-Killer/releases/latest" target="_blank">Download the latest release</a></li>
+<li>Extract the files to your preferred location</li>
+<li>Run <code>Taskbar Killer.exe</code></li>
+<li>Right-click the system tray icon and select "Add to Startup" for automatic startup</li>
+</ol>
+
+<h3>Usage</h3>
+
+<div class="row">
+<div class="col-md-4">
+<div class="card">
+<div class="card-header"><strong><i class="fas fa-mouse-pointer"></i> System Tray Icon</strong></div>
+<div class="card-body">
+<ul>
+<li><strong>Left Click:</strong> Toggle auto-hide on/off</li>
+<li><strong>Double Click:</strong> Toggle auto-hide on/off</li>
+<li><strong>Right Click:</strong> Access context menu</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card">
+<div class="card-header"><strong><i class="fas fa-list"></i> Context Menu</strong></div>
+<div class="card-body">
+<ul>
+<li><strong>Toggle Auto-Hide:</strong> Manual toggle</li>
+<li><strong>Add to Startup:</strong> Auto-start with Windows</li>
+<li><strong>Remove from Startup:</strong> Disable auto-start</li>
+<li><strong>Exit:</strong> Close the application</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card">
+<div class="card-header"><strong><i class="fas fa-eye"></i> Visual Indicators</strong></div>
+<div class="card-body">
+<ul>
+<li><strong>Taskbar Up Icon:</strong> Auto-hide disabled (always visible)</li>
+<li><strong>Taskbar Down Icon:</strong> Auto-hide enabled (hidden until hover)</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<h2><i class="fas fa-laptop"></i> System Requirements</h2>
+
+<div class="alert alert-success">
+<h5><i class="fas fa-check-circle"></i> Minimum Requirements:</h5>
+<ul>
+<li><strong>Operating System:</strong> Windows 10 or later</li>
+<li><strong>Framework:</strong> .NET 6.0 Runtime (Windows)</li>
+<li><strong>Memory:</strong> Minimal (runs in background)</li>
+<li><strong>Storage:</strong> <span id="storage-requirement">~300KB</span> executable + dependencies</li>
+</ul>
+</div>
+
+<h2><i class="fas fa-code"></i> Technical Information</h2>
+
+<div class="row">
+<div class="col-md-6">
+<h4>Development Details</h4>
+<ul>
+<li><strong>Language:</strong> C# with Windows Forms</li>
+<li><strong>Framework:</strong> .NET 6.0</li>
+<li><strong>Architecture:</strong> Windows x64</li>
+<li><strong>Size:</strong> <span id="tech-size">~300KB</span> executable</li>
+</ul>
+</div>
+
+<div class="col-md-6">
+<h4>Key Technologies</h4>
+<ul>
+<li><strong>Registry Management:</strong> Windows Registry API</li>
+<li><strong>Event Monitoring:</strong> System power and session events</li>
+<li><strong>UI Framework:</strong> Windows Forms system tray</li>
+<li><strong>Build System:</strong> Visual Studio 2022</li>
+</ul>
+</div>
+</div>
+
+<h2><i class="fas fa-download"></i> Download Options</h2>
+
+<div class="row">
+<div class="col-md-6">
+<div class="card border-primary">
+<div class="card-header bg-primary text-white">
+<h5><i class="fas fa-user"></i> End Users (Recommended)</h5>
+</div>
+<div class="card-body">
+<p><strong>Ready-to-use installer</strong> with everything included.</p>
+<ul>
+<li>MSI installer package</li>
+<li>Automatic dependency handling</li>
+<li>Start menu shortcuts</li>
+<li>Easy uninstall option</li>
+</ul>
+<p><a href="https://github.com/N6REJ/Taskbar-Killer/releases/latest" class="btn btn-primary" target="_blank"><i class="fas fa-download"></i> Download Installer</a></p>
+</div>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card border-secondary">
+<div class="card-header bg-secondary text-white">
+<h5><i class="fas fa-code"></i> Developers</h5>
+</div>
+<div class="card-body">
+<p><strong>Source code</strong> for developers and contributors.</p>
+<ul>
+<li>Complete Visual Studio solution</li>
+<li>MIT License (free to modify)</li>
+<li>Build instructions included</li>
+<li>MSI installer project</li>
+</ul>
+<p><a href="https://github.com/N6REJ/Taskbar-Killer" class="btn btn-secondary" target="_blank"><i class="fab fa-github"></i> View on GitHub</a></p>
+</div>
+</div>
+</div>
+</div>
+
+<h2><i class="fas fa-life-ring"></i> Support & Community</h2>
+
+<div class="alert alert-info">
+<h5><i class="fas fa-question-circle"></i> Need Help?</h5>
+<p>For bug reports, feature requests, or general support:</p>
+<ul>
+<li><strong>GitHub Issues:</strong> <a href="https://github.com/N6REJ/Taskbar-Killer/issues" target="_blank">Report bugs or request features</a></li>
+<li><strong>GitHub Releases:</strong> <a href="https://github.com/N6REJ/Taskbar-Killer/releases/latest" target="_blank">Download latest version</a></li>
+<li><strong>Documentation:</strong> Complete usage guide included with download</li>
+</ul>
+</div>
+
+<h2><i class="fas fa-balance-scale"></i> License</h2>
+
+<p>Taskbar Killer is released under the <strong>MIT License</strong>, making it completely free to use, modify, and distribute. This means:</p>
+
+<ul>
+<li><strong>Free for personal use</strong> - No cost, no restrictions</li>
+<li><strong>Free for commercial use</strong> - Use in business environments</li>
+<li><strong>Open source</strong> - Full source code available</li>
+<li><strong>Modifiable</strong> - Customize to your needs</li>
+</ul>
+
+<div class="alert alert-success">
+<h5><i class="fas fa-heart"></i> Why Choose Taskbar Killer?</h5>
+<ul>
+<li><strong>Solves a real problem</strong> that affects many Windows users</li>
+<li><strong>Lightweight and efficient</strong> - won't slow down your system</li>
+<li><strong>Set it and forget it</strong> - works automatically in the background</li>
+<li><strong>Free and open source</strong> - no hidden costs or limitations</li>
+<li><strong>Actively maintained</strong> - regular updates and bug fixes</li>
+</ul>
+</div>
+
+<hr>
+
+<p class="text-center"><em>Taskbar Killer - Keep your taskbar hidden, automatically.</em></p>
+
+<p class="text-center">
+<a href="https://github.com/N6REJ/Taskbar-Killer/releases/latest" class="btn btn-primary btn-lg" target="_blank"><i class="fas fa-download"></i> Download Now</a>
+<a href="https://github.com/N6REJ/Taskbar-Killer" class="btn btn-outline-secondary btn-lg" target="_blank"><i class="fab fa-github"></i> View Source</a>
+</p>
