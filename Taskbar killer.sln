@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36310.24
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskbarAutoHideOnResume", "TaskbarAutoHideOnResume.csproj", "{8F66C6FF-7A71-ED29-F06A-7208D8C65CB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taskbar Killer", "Taskbar Killer.csproj", "{8F66C6FF-7A71-ED29-F06A-7208D8C65CB2}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{52B20422-474D-5734-629F-99A1F7DE9787}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,8 @@ Global
 		{8F66C6FF-7A71-ED29-F06A-7208D8C65CB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F66C6FF-7A71-ED29-F06A-7208D8C65CB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F66C6FF-7A71-ED29-F06A-7208D8C65CB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52B20422-474D-5734-629F-99A1F7DE9787}.Debug|Any CPU.ActiveCfg = Debug
+		{52B20422-474D-5734-629F-99A1F7DE9787}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

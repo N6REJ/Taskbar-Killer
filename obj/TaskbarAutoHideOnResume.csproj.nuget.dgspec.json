@@ -8,7 +8,7 @@
       "version": "1.0.0",
       "restore": {
         "projectUniqueName": "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj",
-        "projectName": "TaskbarAutoHideOnResume",
+        "projectName": "Taskbar Killer",
         "projectPath": "E:\\MY_PROJECTS\\taskbar-killer\\TaskbarAutoHideOnResume.csproj",
         "packagesPath": "C:\\Users\\troy\\.nuget\\packages\\",
         "outputPath": "E:\\MY_PROJECTS\\taskbar-killer\\obj\\",
@@ -49,6 +49,20 @@
       "frameworks": {
         "net6.0-windows7.0": {
           "targetAlias": "net6.0-windows",
+          "dependencies": {
+            "Microsoft.NET.ILLink.Analyzers": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.100-1.23211.1, )",
+              "autoReferenced": true
+            },
+            "Microsoft.NET.ILLink.Tasks": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.100-1.23211.1, )",
+              "autoReferenced": true
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -69,6 +83,11 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302\\RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
         }
       }
     }

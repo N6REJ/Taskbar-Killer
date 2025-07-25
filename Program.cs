@@ -10,7 +10,9 @@ namespace TaskbarAutoHideOnResume
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            
+            // Use TrayApp ApplicationContext to keep the app running
+            Application.Run(new TrayApp());
         }
     }
 }

@@ -18,34 +18,71 @@ namespace TaskbarAutoHideOnResume
 
         public Form1()
         {
-            // No designer, so no InitializeComponent();
-            this.WindowState = FormWindowState.Minimized;
-            this.ShowInTaskbar = false;
-            this.Visible = false;
+            try
+            {
+                LogDebug("Application starting...");
+                
+                // No designer, so no InitializeComponent();
+                this.WindowState = FormWindowState.Minimized;
+                this.ShowInTaskbar = false;
+                this.Visible = false;
 
-            // Load PNG icons directly
-            taskbarUpIcon = LoadIconFromPng(taskbarUpPath);
-            taskbarDownIcon = LoadIconFromPng(taskbarDownPath);
+                LogDebug("Form initialized, loading icons...");
 
-            // Read the current auto-hide state from registry
-            autoHideEnabled = GetTaskbarAutoHide();
+                // Load PNG icons directly
+                taskbarUpIcon = LoadIconFromPng(taskbarUpPath);
+                taskbarDownIcon = LoadIconFromPng(taskbarDownPath);
 
-            trayMenu = new ContextMenuStrip();
-            trayMenu.Items.Add("Toggle Auto-Hide", null, ToggleAutoHide);
-            trayMenu.Items.Add("Add to Startup", null, AddToStartup);
-            trayMenu.Items.Add("Remove from Startup", null, RemoveFromStartup);
-            trayMenu.Items.Add("Exit", null, OnExit);
+                LogDebug($"Icons loaded - Up: {(taskbarUpIcon != null ? "Success" : "Failed")}, Down: {(taskbarDownIcon != null ? "Success" : "Failed")}");
 
-            trayIcon = new NotifyIcon();
-            trayIcon.Text = "Taskbar Auto-Hide Trigger";
-            trayIcon.Icon = autoHideEnabled ? taskbarDownIcon : taskbarUpIcon;
-            trayIcon.ContextMenuStrip = trayMenu;
-            trayIcon.Visible = true;
-            trayIcon.DoubleClick += ToggleAutoHide;
-            trayIcon.MouseClick += TrayIcon_MouseClick;
+                // Read the current auto-hide state from registry
+                autoHideEnabled = GetTaskbarAutoHide();
+                LogDebug($"Auto-hide state: {autoHideEnabled}");
 
-            SystemEvents.PowerModeChanged += OnPowerModeChanged;
-            SystemEvents.SessionSwitch += OnSessionSwitch;
+                trayMenu = new ContextMenuStrip();
+                trayMenu.Items.Add("Toggle Auto-Hide", null, ToggleAutoHide);
+                trayMenu.Items.Add("Add to Startup", null, AddToStartup);
+                trayMenu.Items.Add("Remove from Startup", null, RemoveFromStartup);
+                trayMenu.Items.Add("Exit", null, OnExit);
+
+                LogDebug("Context menu created");
+
+                trayIcon = new NotifyIcon();
+                trayIcon.Text = "Taskbar Killer";
+                trayIcon.Icon = autoHideEnabled ? taskbarDownIcon : taskbarUpIcon;
+                trayIcon.ContextMenuStrip = trayMenu;
+                trayIcon.Visible = true;
+                trayIcon.DoubleClick += ToggleAutoHide;
+                trayIcon.MouseClick += TrayIcon_MouseClick;
+
+                LogDebug($"Tray icon created - Visible: {trayIcon.Visible}, Icon: {(trayIcon.Icon != null ? "Set" : "Null")}, Text: {trayIcon.Text}");
+
+                SystemEvents.PowerModeChanged += OnPowerModeChanged;
+                SystemEvents.SessionSwitch += OnSessionSwitch;
+                
+                LogDebug("Application initialization complete");
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"ERROR: {ex.Message}\nStack trace: {ex.StackTrace}");
+                MessageBox.Show($"Error initializing application: {ex.Message}\n\nStack trace:\n{ex.StackTrace}",
+                    "Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+        }
+
+        private void LogDebug(string message)
+        {
+            try
+            {
+                string logPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Application.ExecutablePath), "debug.log");
+                string logEntry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - {message}\n";
+                System.IO.File.AppendAllText(logPath, logEntry);
+            }
+            catch
+            {
+                // Ignore logging errors
+            }
         }
 
         private void ToggleAutoHide(object sender, EventArgs e)
@@ -72,8 +109,9 @@ namespace TaskbarAutoHideOnResume
 
         private void OnExit(object sender, EventArgs e)
         {
+            LogDebug("Exit requested");
             trayIcon.Visible = false;
-            Application.Exit();
+            this.Close();
         }
 
         private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
@@ -117,7 +155,7 @@ namespace TaskbarAutoHideOnResume
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error accessing registry: {ex.Message}", "Registry Error", 
+                MessageBox.Show($"Error accessing registry: {ex.Message}", "Registry Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             return false;
@@ -197,29 +235,83 @@ namespace TaskbarAutoHideOnResume
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Prevent the form from closing unless we're exiting
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                this.Hide();
+                return;
+            }
+            
             trayIcon.Visible = false;
             SystemEvents.PowerModeChanged -= OnPowerModeChanged;
             SystemEvents.SessionSwitch -= OnSessionSwitch;
             base.OnFormClosing(e);
         }
 
+        protected override void SetVisibleCore(bool value)
+        {
+            // Keep the form hidden
+            base.SetVisibleCore(false);
+        }
+
         private Icon LoadIconFromPng(string path)
         {
             try
             {
-                using (Bitmap bmp = new Bitmap(path))
+                // Get the directory where the executable is located
+                string exeDir = System.IO.Path.GetDirectoryName(Application.ExecutablePath);
+                string fullPath = System.IO.Path.Combine(exeDir, path);
+
+                if (System.IO.File.Exists(fullPath))
                 {
-                    // Convert bitmap to icon
-                    IntPtr hIcon = bmp.GetHicon();
-                    Icon icon = Icon.FromHandle(hIcon);
-                    // Note: Icon.FromHandle creates a copy, so we need to destroy the original handle
-                    DestroyIcon(hIcon);
-                    return icon;
+                    using (Bitmap bmp = new Bitmap(fullPath))
+                    {
+                        // Resize to standard icon size for better compatibility
+                        using (Bitmap resized = new Bitmap(bmp, new Size(16, 16)))
+                        {
+                            // Convert bitmap to icon
+                            IntPtr hIcon = resized.GetHicon();
+                            Icon icon = Icon.FromHandle(hIcon);
+                            // Note: Icon.FromHandle creates a copy, so we need to destroy the original handle
+                            DestroyIcon(hIcon);
+                            return icon;
+                        }
+                    }
+                }
+                else
+                {
+                    // Try to load the .ico file as fallback
+                    string icoPath = System.IO.Path.Combine(exeDir, "taskbar.ico");
+                    if (System.IO.File.Exists(icoPath))
+                    {
+                        return new Icon(icoPath);
+                    }
+                    // Final fallback to system icon
+                    return SystemIcons.Application;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Fallback to system icon if error
+                // Log the error for debugging (optional)
+                System.Diagnostics.Debug.WriteLine($"Error loading icon from {path}: {ex.Message}");
+
+                // Try to load the .ico file as fallback
+                try
+                {
+                    string exeDir = System.IO.Path.GetDirectoryName(Application.ExecutablePath);
+                    string icoPath = System.IO.Path.Combine(exeDir, "taskbar.ico");
+                    if (System.IO.File.Exists(icoPath))
+                    {
+                        return new Icon(icoPath);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore fallback errors
+                }
+
+                // Final fallback to system icon
                 return SystemIcons.Application;
             }
         }
