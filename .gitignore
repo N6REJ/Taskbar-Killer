@@ -1,15 +1,22 @@
+# Build outputs
+bin/
+obj/
 **/debug
 **/release
-**/bin
 **/*.aps
-.vs
-ipch
+
+# Visual Studio
+.vs/
+*.user
 *.VC.db
 *.VC.opendb
-.idea/.gitignore
-.idea/misc.xml
-.idea/modules.xml
-.idea/php.xml
-.idea/vcs.xml
-.idea/winkill.iml
-.idea/*
+ipch/
+
+# JetBrains IDEs
+.idea/
+
+# Qodo AI
+.qodo/
+
+# Debug logs
+debug.log

@@ -1,13 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Common properties for all configurations -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>TaskbarAutoHideOnResume</RootNamespace>
     <AssemblyName>Taskbar Killer</AssemblyName>
-    <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>icons\taskbar.ico</ApplicationIcon>
     
     <!-- License and Package Information -->
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -21,14 +20,36 @@
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <ApplicationIcon>icons\taskbar.ico</ApplicationIcon>
     <PackageIcon>taskbar-down.png</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <!-- Debug configuration - standard build for development -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebuggerSupport>true</DebuggerSupport>
+  </PropertyGroup>
+
+  <!-- Release configuration - standard build with installer compatibility -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebuggerSupport>false</DebuggerSupport>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  
+  <!-- Post-build step for Release to copy files for installer -->
+  <Target Name="CopyForInstaller" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+    <ItemGroup>
+      <FilesToCopy Include="$(OutputPath)Taskbar Killer.exe" />
+      <FilesToCopy Include="$(OutputPath)Taskbar Killer.deps.json" />
+      <FilesToCopy Include="$(OutputPath)Taskbar Killer.runtimeconfig.json" />
+    </ItemGroup>
+    <MakeDir Directories="$(OutputPath)win-x64" />
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(OutputPath)win-x64" />
+  </Target>
+  
   <ItemGroup>
     <Content Include="icons\taskbar.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="icons\taskbar.ico" />
   </ItemGroup>
   
   <ItemGroup>
@@ -44,11 +65,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Pack>true</Pack>
       <PackagePath></PackagePath>
-    </None>
-    <None Update="README.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 </Project>

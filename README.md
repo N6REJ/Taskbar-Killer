@@ -61,12 +61,54 @@ Taskbar Killer monitors these events and automatically:
 - Windows 10 or later
 - .NET 6.0 Runtime (Windows)
 
+## Building from Source
+
+### Prerequisites
+- .NET 6.0 SDK
+- Windows 10 or later
+- Visual Studio 2022 (recommended for MSI installer)
+
+### Simple Visual Studio Workflow
+
+#### For Development
+1. Open `Taskbar killer.sln` in Visual Studio
+2. Set configuration to `Debug`
+3. Build → Clean Solution, then Build → Rebuild Solution (or F6)
+
+#### For Deployment with MSI Installer
+1. Open `Taskbar killer.sln` in Visual Studio
+2. Set configuration to `Release`
+3. Build → Clean Solution, then Build → Rebuild Solution
+4. Right-click `Installer` project → Rebuild
+5. MSI installer will be created in: `Installer\Release\Taskbar Killer Installer.msi`
+
+### Build Outputs
+- **Debug build**: `bin\Debug\net6.0-windows\` (requires .NET 6 runtime)
+- **Release build**: `bin\Release\net6.0-windows\` (lightweight, 294KB executable)
+- **MSI Installer**: `Installer\Release\Taskbar Killer Installer.msi`
+
+### Command Line (Alternative)
+```bash
+# Debug build
+dotnet build "Taskbar Killer.csproj" -c Debug
+
+# Release build  
+dotnet build "Taskbar Killer.csproj" -c Release
+```
+
+### Visual Studio Integration
+- **Debug configuration**: Standard build for development and debugging
+- **Release configuration**: Lightweight optimized build (requires .NET 6 runtime)
+- **MSI Installer**: Automatically packages the Release build
+- **IntelliSense**: Full support for debugging and development
+
 ## Technical Details
 
 - Built with C# and Windows Forms
 - Uses Windows Registry to manage taskbar settings
 - Monitors system power and session events
-- Lightweight system tray application
+- Lightweight system tray application (294KB executable)
+- Requires .NET 6.0 Runtime
 
 ## Support
 

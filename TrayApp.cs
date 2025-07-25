@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 
@@ -254,24 +253,67 @@ namespace TaskbarAutoHideOnResume
         {
             try
             {
-                // SIMPLIFIED: Just use the .ico file directly
+                // First try to load from the icons subdirectory (for single-file publishing)
                 string exeDir = System.IO.Path.GetDirectoryName(Application.ExecutablePath);
-                string icoPath = System.IO.Path.Combine(exeDir, "taskbar.ico");
+                string iconsDir = System.IO.Path.Combine(exeDir, "icons");
+                string icoPath = System.IO.Path.Combine(iconsDir, "taskbar.ico");
                 
-                LogDebug($"Trying to load icon from: {icoPath}");
-                LogDebug($"File exists: {System.IO.File.Exists(icoPath)}");
+                LogDebug($"Trying to load icon from icons directory: {icoPath}");
+                LogDebug($"Icons directory exists: {System.IO.Directory.Exists(iconsDir)}");
+                LogDebug($"Icon file exists: {System.IO.File.Exists(icoPath)}");
                 
                 if (System.IO.File.Exists(icoPath))
                 {
                     Icon icon = new Icon(icoPath);
-                    LogDebug($"Icon loaded successfully: {icon != null}");
+                    LogDebug($"Icon loaded successfully from icons directory: {icon != null}");
                     return icon;
                 }
-                else
+                
+                // Fallback: try to load from the executable directory
+                string fallbackIcoPath = System.IO.Path.Combine(exeDir, "taskbar.ico");
+                LogDebug($"Trying fallback icon path: {fallbackIcoPath}");
+                LogDebug($"Fallback file exists: {System.IO.File.Exists(fallbackIcoPath)}");
+                
+                if (System.IO.File.Exists(fallbackIcoPath))
                 {
-                    LogDebug("Using SystemIcons.Information as fallback");
-                    return SystemIcons.Information; // Use a visible system icon
+                    Icon icon = new Icon(fallbackIcoPath);
+                    LogDebug($"Icon loaded successfully from fallback path: {icon != null}");
+                    return icon;
                 }
+                
+                // Try to load from embedded resources
+                LogDebug("Attempting to load icon from embedded resources");
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var resourceNames = assembly.GetManifestResourceNames();
+                LogDebug($"Available resources: {string.Join(", ", resourceNames)}");
+                
+                // Look for the icon resource
+                string iconResourceName = null;
+                foreach (var resourceName in resourceNames)
+                {
+                    if (resourceName.Contains("taskbar.ico") || resourceName.EndsWith(".ico"))
+                    {
+                        iconResourceName = resourceName;
+                        break;
+                    }
+                }
+                
+                if (!string.IsNullOrEmpty(iconResourceName))
+                {
+                    LogDebug($"Found icon resource: {iconResourceName}");
+                    using (var stream = assembly.GetManifestResourceStream(iconResourceName))
+                    {
+                        if (stream != null)
+                        {
+                            Icon icon = new Icon(stream);
+                            LogDebug($"Icon loaded successfully from embedded resource: {icon != null}");
+                            return icon;
+                        }
+                    }
+                }
+                
+                LogDebug("Using SystemIcons.Application as fallback");
+                return SystemIcons.Application; // Use a visible system icon
             }
             catch (Exception ex)
             {
