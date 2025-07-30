@@ -1,3 +1,8 @@
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/N6REJ/taskbar-killer)
+![GitHub top language](https://img.shields.io/github/languages/top/N6REJ/taskbar-killer)
+![GitHub All Releases](https://img.shields.io/github/downloads/N6REJ/taskbar-killer/total)
+![License: GPL v3](https://img.shields.io/badge/License-MIT-blue.svg)
+
 # Taskbar Killer
 
 A comprehensive Windows utility that automatically manages taskbar auto-hide functionality and resolves dual monitor taskbar conflicts, particularly useful for maintaining taskbar settings after system resume, session unlock events, and display configuration changes.
