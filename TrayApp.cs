@@ -27,6 +27,16 @@ namespace TaskbarAutoHideOnResume
         // Enhanced dialog monitoring
         private System.Windows.Forms.Timer dialogMonitorTimer;
 
+        // HDMI input switching support
+        private DateTime lastDisplayChangeTime = DateTime.MinValue;
+        private bool isHdmiSwitchingDetected = false;
+        private System.Windows.Forms.Timer hdmiStabilizationTimer;
+
+        // Screen blanking detection
+        private bool isScreenBlanked = false;
+        private DateTime screenBlankStartTime = DateTime.MinValue;
+        private System.Windows.Forms.Timer screenBlankRecoveryTimer;
+
         public TrayApp()
         {
             try
@@ -72,6 +82,12 @@ namespace TaskbarAutoHideOnResume
                 // Initialize enhanced dialog monitoring
                 InitializeDialogMonitoring();
 
+                // Initialize HDMI switching support
+                InitializeHdmiSwitchingSupport();
+
+                // Initialize screen blanking detection
+                InitializeScreenBlankingDetection();
+
                 LogDebug("TrayApp initialization complete");
             }
             catch (Exception ex)
@@ -107,7 +123,15 @@ namespace TaskbarAutoHideOnResume
         {
             try
             {
-                await CloseTaskbarErrorDialogs();
+                // More frequent dialog monitoring during HDMI switching
+                if (isHdmiSwitchingDetected)
+                {
+                    await CloseTaskbarErrorDialogs();
+                }
+                else
+                {
+                    await CloseTaskbarErrorDialogs();
+                }
             }
             catch (Exception ex)
             {
@@ -170,6 +194,18 @@ namespace TaskbarAutoHideOnResume
             {
                 dialogMonitorTimer.Stop();
                 dialogMonitorTimer.Dispose();
+            }
+
+            if (hdmiStabilizationTimer != null)
+            {
+                hdmiStabilizationTimer.Stop();
+                hdmiStabilizationTimer.Dispose();
+            }
+
+            if (screenBlankRecoveryTimer != null)
+            {
+                screenBlankRecoveryTimer.Stop();
+                screenBlankRecoveryTimer.Dispose();
             }
 
             ExitThread();
@@ -471,8 +507,49 @@ namespace TaskbarAutoHideOnResume
                 isHandlingDisplayChange = true;
                 LogDebug("Handling display change...");
 
-                // Wait a moment for the display change to settle
-                await Task.Delay(1000);
+                // Check if this is screen blanking recovery (highest priority)
+                bool isScreenBlankRecovery = DetectScreenBlankingRecovery();
+                
+                // Check if this is HDMI switching
+                bool isHdmiSwitch = DetectHdmiSwitching();
+                lastDisplayChangeTime = DateTime.Now;
+
+                if (isScreenBlankRecovery)
+                {
+                    LogDebug("Screen blanking recovery detected - using aggressive handling");
+                    
+                    // Start screen blank recovery timer
+                    screenBlankRecoveryTimer.Stop();
+                    screenBlankRecoveryTimer.Start();
+                    
+                    // Immediate and aggressive dialog cleanup for screen blanking recovery
+                    await CloseTaskbarErrorDialogs();
+                    await Task.Delay(200);
+                    await CloseTaskbarErrorDialogs(); // Second immediate pass
+                    
+                    // Very short initial delay for screen blanking recovery
+                    await Task.Delay(300);
+                }
+                else if (isHdmiSwitch)
+                {
+                    LogDebug("HDMI switching detected - using enhanced handling");
+                    isHdmiSwitchingDetected = true;
+                    
+                    // Start stabilization timer for HDMI switching
+                    hdmiStabilizationTimer.Stop();
+                    hdmiStabilizationTimer.Start();
+                    
+                    // Immediate dialog cleanup for HDMI switching
+                    await CloseTaskbarErrorDialogs();
+                    
+                    // Shorter initial delay for HDMI switching
+                    await Task.Delay(500);
+                }
+                else
+                {
+                    // Standard display change handling
+                    await Task.Delay(1000);
+                }
 
                 // Check for and resolve taskbar conflicts
                 await ResolveTaskbarConflicts();
@@ -481,8 +558,31 @@ namespace TaskbarAutoHideOnResume
                 if (autoHideEnabled)
                 {
                     LogDebug("Restoring auto-hide setting after display change");
-                    await Task.Delay(500); // Additional delay before applying settings
-                    SetTaskbarAutoHide(true);
+                    
+                    if (isScreenBlankRecovery)
+                    {
+                        // For screen blanking recovery, use the most aggressive restoration
+                        await Task.Delay(100);
+                        SetTaskbarAutoHide(true);
+                        await Task.Delay(200);
+                        SetTaskbarAutoHide(true);
+                        await Task.Delay(200);
+                        SetTaskbarAutoHide(true); // Triple-apply for screen blanking recovery
+                    }
+                    else if (isHdmiSwitch)
+                    {
+                        // For HDMI switching, use shorter delay and more aggressive restoration
+                        await Task.Delay(200);
+                        SetTaskbarAutoHide(true);
+                        await Task.Delay(200);
+                        SetTaskbarAutoHide(true); // Double-apply for HDMI switching
+                    }
+                    else
+                    {
+                        await Task.Delay(500);
+                        SetTaskbarAutoHide(true);
+                    }
+                    
                     trayIcon.Icon = taskbarDownIcon;
                 }
 
@@ -644,6 +744,218 @@ namespace TaskbarAutoHideOnResume
                 LogDebug($"Error in manual dialog close: {ex.Message}");
                 MessageBox.Show($"Error closing dialogs: {ex.Message}", "Error", 
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void InitializeHdmiSwitchingSupport()
+        {
+            try
+            {
+                LogDebug("Initializing HDMI switching support...");
+
+                // Set up stabilization timer for HDMI input switching
+                hdmiStabilizationTimer = new System.Windows.Forms.Timer();
+                hdmiStabilizationTimer.Interval = 3000; // 3 second stabilization period
+                hdmiStabilizationTimer.Tick += OnHdmiStabilizationTimer;
+
+                LogDebug("HDMI switching support initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error initializing HDMI switching support: {ex.Message}");
+            }
+        }
+
+        private async void OnHdmiStabilizationTimer(object sender, EventArgs e)
+        {
+            try
+            {
+                LogDebug("HDMI stabilization timer triggered");
+                hdmiStabilizationTimer.Stop();
+                isHdmiSwitchingDetected = false;
+
+                // Perform final cleanup and restoration after HDMI switching
+                await PerformPostHdmiSwitchCleanup();
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error in HDMI stabilization timer: {ex.Message}");
+            }
+        }
+
+        private async Task PerformPostHdmiSwitchCleanup()
+        {
+            try
+            {
+                LogDebug("Performing post-HDMI switch cleanup...");
+
+                // Close any lingering error dialogs
+                await CloseTaskbarErrorDialogs();
+
+                // Wait for display to fully stabilize
+                await Task.Delay(1000);
+
+                // Restore taskbar auto-hide if it was enabled
+                if (autoHideEnabled)
+                {
+                    LogDebug("Restoring auto-hide after HDMI switch");
+                    SetTaskbarAutoHide(true);
+                    trayIcon.Icon = taskbarDownIcon;
+                }
+
+                // Force a taskbar refresh to ensure proper state
+                RefreshTaskbar();
+
+                LogDebug("Post-HDMI switch cleanup completed");
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error in post-HDMI switch cleanup: {ex.Message}");
+            }
+        }
+
+        private bool DetectHdmiSwitching()
+        {
+            try
+            {
+                DateTime now = DateTime.Now;
+                TimeSpan timeSinceLastChange = now - lastDisplayChangeTime;
+
+                // HDMI switching typically causes rapid display changes within a short time window
+                // If we detect display changes within 5 seconds of each other, it's likely HDMI switching
+                if (timeSinceLastChange.TotalSeconds < 5 && lastDisplayChangeTime != DateTime.MinValue)
+                {
+                    LogDebug($"HDMI switching detected - Time since last change: {timeSinceLastChange.TotalSeconds:F2} seconds");
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error detecting HDMI switching: {ex.Message}");
+                return false;
+            }
+        }
+
+        private void InitializeScreenBlankingDetection()
+        {
+            try
+            {
+                LogDebug("Initializing screen blanking detection...");
+
+                // Set up recovery timer for screen blanking scenarios
+                screenBlankRecoveryTimer = new System.Windows.Forms.Timer();
+                screenBlankRecoveryTimer.Interval = 5000; // 5 second recovery period
+                screenBlankRecoveryTimer.Tick += OnScreenBlankRecoveryTimer;
+
+                LogDebug("Screen blanking detection initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error initializing screen blanking detection: {ex.Message}");
+            }
+        }
+
+        private async void OnScreenBlankRecoveryTimer(object sender, EventArgs e)
+        {
+            try
+            {
+                LogDebug("Screen blank recovery timer triggered");
+                screenBlankRecoveryTimer.Stop();
+                isScreenBlanked = false;
+
+                // Perform recovery actions after screen blanking
+                await PerformScreenBlankRecovery();
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error in screen blank recovery timer: {ex.Message}");
+            }
+        }
+
+        private async Task PerformScreenBlankRecovery()
+        {
+            try
+            {
+                LogDebug("Performing screen blank recovery...");
+
+                // Aggressive dialog cleanup for screen blanking recovery
+                await CloseTaskbarErrorDialogs();
+                await Task.Delay(500);
+                await CloseTaskbarErrorDialogs(); // Second pass
+
+                // Wait for display to stabilize after screen blanking
+                await Task.Delay(1500);
+
+                // Restore taskbar auto-hide if it was enabled
+                if (autoHideEnabled)
+                {
+                    LogDebug("Restoring auto-hide after screen blank recovery");
+                    
+                    // Triple-apply for screen blanking scenarios (more aggressive than HDMI switching)
+                    SetTaskbarAutoHide(true);
+                    await Task.Delay(300);
+                    SetTaskbarAutoHide(true);
+                    await Task.Delay(300);
+                    SetTaskbarAutoHide(true);
+                    
+                    trayIcon.Icon = taskbarDownIcon;
+                }
+
+                // Force multiple taskbar refreshes
+                RefreshTaskbar();
+                await Task.Delay(200);
+                RefreshTaskbar();
+
+                LogDebug("Screen blank recovery completed");
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error in screen blank recovery: {ex.Message}");
+            }
+        }
+
+        private bool DetectScreenBlankingRecovery()
+        {
+            try
+            {
+                DateTime now = DateTime.Now;
+                
+                // Check if we're coming back from a screen blank state
+                if (isScreenBlanked)
+                {
+                    TimeSpan blankDuration = now - screenBlankStartTime;
+                    LogDebug($"Screen blanking recovery detected - Blank duration: {blankDuration.TotalSeconds:F2} seconds");
+                    return true;
+                }
+
+                // Detect potential screen blanking based on display configuration changes
+                // Screen blanking often shows as temporary display configuration changes
+                string currentConfig = GetDisplayConfiguration();
+                if (currentConfig == "unknown" || currentConfig.Contains("0x0"))
+                {
+                    if (!isScreenBlanked)
+                    {
+                        LogDebug("Potential screen blanking detected - Display configuration shows unknown/zero resolution");
+                        isScreenBlanked = true;
+                        screenBlankStartTime = now;
+                        return false; // Don't trigger recovery yet, wait for actual recovery
+                    }
+                }
+                else if (isScreenBlanked)
+                {
+                    // We have a valid configuration and were previously blanked - this is recovery
+                    LogDebug("Screen blanking recovery detected - Valid display configuration restored");
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error detecting screen blanking recovery: {ex.Message}");
+                return false;
             }
         }
     }
