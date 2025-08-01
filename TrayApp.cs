@@ -624,6 +624,7 @@ namespace TaskbarAutoHideOnResume
                 // Look for common error dialog patterns - including your specific error
                 string[] errorTitles = {
                     "Taskbar",
+                    "taskbar", // Case-sensitive search
                     "Windows Shell",
                     "Explorer",
                     "can't have 2 taskbars",
@@ -641,7 +642,7 @@ namespace TaskbarAutoHideOnResume
                     IntPtr errorDialog = FindWindow(null, title);
                     if (errorDialog != IntPtr.Zero)
                     {
-                        LogDebug($"Found error dialog: {title}");
+                        LogDebug($"Found error dialog by title: {title}");
                         SendMessage(errorDialog, 0x0010, IntPtr.Zero, IntPtr.Zero); // WM_CLOSE
                         await Task.Delay(100);
                     }
@@ -649,6 +650,9 @@ namespace TaskbarAutoHideOnResume
 
                 // Enhanced dialog detection - look for all dialog windows
                 EnumWindows(new EnumWindowsProc(EnumDialogWindows), IntPtr.Zero);
+
+                // Additional search for dialogs with specific button text (OK, Cancel, etc.)
+                await CloseDialogsWithButtons();
 
                 // Also look for dialog boxes by class name
                 string[] dialogClasses = { "#32770", "Dialog", "MessageBox" }; // Common dialog class names
@@ -671,10 +675,21 @@ namespace TaskbarAutoHideOnResume
                             windowText.Contains("toolbar is already") ||
                             windowText.Contains("multiple taskbar") ||
                             windowText.Contains("you can have only one") ||
+                            windowText.Contains("one auto-hide toolbar per side") ||
+                            windowText.Contains("die of your screen") || // Typo in the original message
+                            windowText.Contains("side of your screen") ||
                             (windowText.Contains("display") && windowText.Contains("taskbar")))
                         {
                             LogDebug($"Closing taskbar error dialog: {windowText}");
+                            
+                            // Try multiple close methods for stubborn dialogs
                             SendMessage(dialog, 0x0010, IntPtr.Zero, IntPtr.Zero); // WM_CLOSE
+                            await Task.Delay(50);
+                            
+                            // Also try pressing ESC key
+                            SendMessage(dialog, 0x0100, new IntPtr(0x1B), IntPtr.Zero); // WM_KEYDOWN ESC
+                            await Task.Delay(50);
+                            SendMessage(dialog, 0x0101, new IntPtr(0x1B), IntPtr.Zero); // WM_KEYUP ESC
                             await Task.Delay(100);
                         }
 
@@ -728,6 +743,56 @@ namespace TaskbarAutoHideOnResume
             }
 
             return true; // Continue enumeration
+        }
+
+        private async Task CloseDialogsWithButtons()
+        {
+            try
+            {
+                // Look for dialogs that might have OK/Cancel buttons and contain taskbar-related text
+                EnumWindows(new EnumWindowsProc((hWnd, lParam) =>
+                {
+                    try
+                    {
+                        // Get window text
+                        var windowText = new System.Text.StringBuilder(512);
+                        GetWindowText(hWnd, windowText, windowText.Capacity);
+                        string windowTextStr = windowText.ToString().ToLower();
+
+                        // Check if this window contains the specific error message
+                        if (windowTextStr.Contains("toolbar is already hidden") ||
+                            windowTextStr.Contains("you can have only one auto-hide") ||
+                            windowTextStr.Contains("die of your screen") ||
+                            windowTextStr.Contains("side of your screen") ||
+                            (windowTextStr.Contains("taskbar") && windowTextStr.Contains("already")))
+                        {
+                            LogDebug($"Found specific taskbar error dialog: {windowTextStr}");
+                            
+                            // Look for OK button in this dialog
+                            IntPtr okButton = FindWindowEx(hWnd, IntPtr.Zero, "Button", "OK");
+                            if (okButton != IntPtr.Zero)
+                            {
+                                LogDebug("Clicking OK button on taskbar error dialog");
+                                SendMessage(okButton, 0x00F5, IntPtr.Zero, IntPtr.Zero); // BM_CLICK
+                            }
+                            else
+                            {
+                                // If no OK button, try to close the dialog directly
+                                SendMessage(hWnd, 0x0010, IntPtr.Zero, IntPtr.Zero); // WM_CLOSE
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogDebug($"Error in button dialog enumeration: {ex.Message}");
+                    }
+                    return true;
+                }), IntPtr.Zero);
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error closing dialogs with buttons: {ex.Message}");
+            }
         }
 
         private async void ManualCloseDialogs(object sender, EventArgs e)
