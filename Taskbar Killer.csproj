@@ -2,7 +2,7 @@
   <!-- Common properties for all configurations -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>TaskbarAutoHideOnResume</RootNamespace>
     <AssemblyName>Taskbar Killer</AssemblyName>
@@ -12,14 +12,14 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://hallhome.us/taskbar</PackageProjectUrl>
     <RepositoryUrl>https://github.com/N6REJ/Taskbar-Killer</RepositoryUrl>
-    <Copyright>Copyright (c) 2025 Taskbar Killer</Copyright>
+    <Copyright>Copyright (c) 2026 Taskbar Killer</Copyright>
     <Description>A lightweight Windows utility that automatically manages taskbar auto-hide functionality</Description>
     <Product>Taskbar Killer</Product>
     <Company>N6REJ</Company>
     <Authors>Troy Hall</Authors>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>26.5.25</Version>
+    <AssemblyVersion>26.5.25.0</AssemblyVersion>
+    <FileVersion>26.5.25.0</FileVersion>
     <PackageIcon>taskbar-down.png</PackageIcon>
   </PropertyGroup>
 

@@ -63,7 +63,7 @@ namespace TaskbarAutoHideOnResume
                 LogDebug("Context menu created");
 
                 trayIcon = new NotifyIcon();
-                trayIcon.Text = "Taskbar Killer Enhanced";
+                trayIcon.Text = "Taskbar Killer v26.5.25";
                 trayIcon.Icon = autoHideEnabled ? taskbarDownIcon : taskbarUpIcon;
                 trayIcon.ContextMenuStrip = trayMenu;
                 trayIcon.Visible = true;
@@ -89,6 +89,12 @@ namespace TaskbarAutoHideOnResume
                 InitializeScreenBlankingDetection();
 
                 LogDebug("TrayApp initialization complete");
+
+                // Perform initial recovery if auto-hide is enabled
+                if (autoHideEnabled)
+                {
+                    _ = PerformFullTaskbarRecovery("Initial Startup");
+                }
             }
             catch (Exception ex)
             {
@@ -215,7 +221,8 @@ namespace TaskbarAutoHideOnResume
         {
             if (e.Mode == PowerModes.Resume && autoHideEnabled)
             {
-                SetTaskbarAutoHide(true);
+                LogDebug("Power mode change: Resume detected");
+                _ = PerformFullTaskbarRecovery("Power Resume");
             }
         }
 
@@ -223,7 +230,49 @@ namespace TaskbarAutoHideOnResume
         {
             if (e.Reason == SessionSwitchReason.SessionUnlock && autoHideEnabled)
             {
-                SetTaskbarAutoHide(true);
+                LogDebug("Session switch: Unlock detected");
+                _ = PerformFullTaskbarRecovery("Session Unlock");
+            }
+        }
+
+        private async Task PerformFullTaskbarRecovery(string reason)
+        {
+            try
+            {
+                LogDebug($"Performing full taskbar recovery. Reason: {reason}");
+
+                // Immediate dialog cleanup
+                await CloseTaskbarErrorDialogs();
+                
+                // Short delay to allow Windows Shell to process previous actions
+                await Task.Delay(500);
+
+                if (autoHideEnabled)
+                {
+                    LogDebug("Applying auto-hide state during full recovery");
+                    
+                    // Apply multiple times with short delays to overcome shell "stickiness"
+                    SetTaskbarAutoHide(true);
+                    await Task.Delay(500);
+                    
+                    // Second check for dialogs that might have appeared after first attempt
+                    await CloseTaskbarErrorDialogs();
+                    
+                    SetTaskbarAutoHide(true);
+                    await Task.Delay(1000);
+                    
+                    // Final apply and refresh
+                    SetTaskbarAutoHide(true);
+                    RefreshTaskbar();
+                    
+                    trayIcon.Icon = taskbarDownIcon;
+                }
+
+                LogDebug($"Full taskbar recovery completed for: {reason}");
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Error in full taskbar recovery ({reason}): {ex.Message}");
             }
         }
 
@@ -516,34 +565,21 @@ namespace TaskbarAutoHideOnResume
 
                 if (isScreenBlankRecovery)
                 {
-                    LogDebug("Screen blanking recovery detected - using aggressive handling");
-                    
-                    // Start screen blank recovery timer
-                    screenBlankRecoveryTimer.Stop();
-                    screenBlankRecoveryTimer.Start();
-                    
-                    // Immediate and aggressive dialog cleanup for screen blanking recovery
-                    await CloseTaskbarErrorDialogs();
-                    await Task.Delay(200);
-                    await CloseTaskbarErrorDialogs(); // Second immediate pass
-                    
-                    // Very short initial delay for screen blanking recovery
-                    await Task.Delay(300);
+                    LogDebug("Screen blanking recovery detected - using unified full recovery");
+                    _ = PerformFullTaskbarRecovery("Screen Blanking Recovery");
+                    return;
                 }
                 else if (isHdmiSwitch)
                 {
-                    LogDebug("HDMI switching detected - using enhanced handling");
+                    LogDebug("HDMI switching detected - using unified full recovery");
                     isHdmiSwitchingDetected = true;
                     
                     // Start stabilization timer for HDMI switching
                     hdmiStabilizationTimer.Stop();
                     hdmiStabilizationTimer.Start();
                     
-                    // Immediate dialog cleanup for HDMI switching
-                    await CloseTaskbarErrorDialogs();
-                    
-                    // Shorter initial delay for HDMI switching
-                    await Task.Delay(500);
+                    _ = PerformFullTaskbarRecovery("HDMI Switching");
+                    return;
                 }
                 else
                 {
@@ -654,6 +690,24 @@ namespace TaskbarAutoHideOnResume
                 // Additional search for dialogs with specific button text (OK, Cancel, etc.)
                 await CloseDialogsWithButtons();
 
+                // Wait a bit before checking for ghost taskbars specifically
+                await Task.Delay(200);
+
+                // Look for duplicate taskbars specifically
+                IntPtr secondaryTaskbar = FindWindow("Shell_SecondaryTrayWnd", null);
+                while (secondaryTaskbar != IntPtr.Zero)
+                {
+                    LogDebug("Found secondary taskbar, attempting to hide it");
+                    // We don't want to close it (might crash explorer), just hide it if it's a ghost
+                    // But if it's the "ghost taskbar" the user mentioned, it's often a window that can be closed
+                    // or it's a toolbar that needs to be unregistered.
+                    
+                    // Try to close it if it's really a ghost
+                    SendMessage(secondaryTaskbar, 0x0010, IntPtr.Zero, IntPtr.Zero); // WM_CLOSE
+                    
+                    secondaryTaskbar = FindWindowEx(IntPtr.Zero, secondaryTaskbar, "Shell_SecondaryTrayWnd", null);
+                }
+
                 // Also look for dialog boxes by class name
                 string[] dialogClasses = { "#32770", "Dialog", "MessageBox" }; // Common dialog class names
 
@@ -745,7 +799,7 @@ namespace TaskbarAutoHideOnResume
             return true; // Continue enumeration
         }
 
-        private async Task CloseDialogsWithButtons()
+        private Task CloseDialogsWithButtons()
         {
             try
             {
@@ -793,6 +847,7 @@ namespace TaskbarAutoHideOnResume
             {
                 LogDebug($"Error closing dialogs with buttons: {ex.Message}");
             }
+            return Task.CompletedTask;
         }
 
         private async void ManualCloseDialogs(object sender, EventArgs e)
@@ -831,7 +886,7 @@ namespace TaskbarAutoHideOnResume
             }
         }
 
-        private async void OnHdmiStabilizationTimer(object sender, EventArgs e)
+        private void OnHdmiStabilizationTimer(object sender, EventArgs e)
         {
             try
             {
@@ -840,7 +895,7 @@ namespace TaskbarAutoHideOnResume
                 isHdmiSwitchingDetected = false;
 
                 // Perform final cleanup and restoration after HDMI switching
-                await PerformPostHdmiSwitchCleanup();
+                _ = PerformFullTaskbarRecovery("HDMI Stabilization Post-Cleanup");
             }
             catch (Exception ex)
             {
@@ -848,36 +903,6 @@ namespace TaskbarAutoHideOnResume
             }
         }
 
-        private async Task PerformPostHdmiSwitchCleanup()
-        {
-            try
-            {
-                LogDebug("Performing post-HDMI switch cleanup...");
-
-                // Close any lingering error dialogs
-                await CloseTaskbarErrorDialogs();
-
-                // Wait for display to fully stabilize
-                await Task.Delay(1000);
-
-                // Restore taskbar auto-hide if it was enabled
-                if (autoHideEnabled)
-                {
-                    LogDebug("Restoring auto-hide after HDMI switch");
-                    SetTaskbarAutoHide(true);
-                    trayIcon.Icon = taskbarDownIcon;
-                }
-
-                // Force a taskbar refresh to ensure proper state
-                RefreshTaskbar();
-
-                LogDebug("Post-HDMI switch cleanup completed");
-            }
-            catch (Exception ex)
-            {
-                LogDebug($"Error in post-HDMI switch cleanup: {ex.Message}");
-            }
-        }
 
         private bool DetectHdmiSwitching()
         {
@@ -922,7 +947,7 @@ namespace TaskbarAutoHideOnResume
             }
         }
 
-        private async void OnScreenBlankRecoveryTimer(object sender, EventArgs e)
+        private void OnScreenBlankRecoveryTimer(object sender, EventArgs e)
         {
             try
             {
@@ -931,7 +956,7 @@ namespace TaskbarAutoHideOnResume
                 isScreenBlanked = false;
 
                 // Perform recovery actions after screen blanking
-                await PerformScreenBlankRecovery();
+                _ = PerformFullTaskbarRecovery("Screen Blank Recovery Post-Cleanup");
             }
             catch (Exception ex)
             {
@@ -939,47 +964,6 @@ namespace TaskbarAutoHideOnResume
             }
         }
 
-        private async Task PerformScreenBlankRecovery()
-        {
-            try
-            {
-                LogDebug("Performing screen blank recovery...");
-
-                // Aggressive dialog cleanup for screen blanking recovery
-                await CloseTaskbarErrorDialogs();
-                await Task.Delay(500);
-                await CloseTaskbarErrorDialogs(); // Second pass
-
-                // Wait for display to stabilize after screen blanking
-                await Task.Delay(1500);
-
-                // Restore taskbar auto-hide if it was enabled
-                if (autoHideEnabled)
-                {
-                    LogDebug("Restoring auto-hide after screen blank recovery");
-                    
-                    // Triple-apply for screen blanking scenarios (more aggressive than HDMI switching)
-                    SetTaskbarAutoHide(true);
-                    await Task.Delay(300);
-                    SetTaskbarAutoHide(true);
-                    await Task.Delay(300);
-                    SetTaskbarAutoHide(true);
-                    
-                    trayIcon.Icon = taskbarDownIcon;
-                }
-
-                // Force multiple taskbar refreshes
-                RefreshTaskbar();
-                await Task.Delay(200);
-                RefreshTaskbar();
-
-                LogDebug("Screen blank recovery completed");
-            }
-            catch (Exception ex)
-            {
-                LogDebug($"Error in screen blank recovery: {ex.Message}");
-            }
-        }
 
         private bool DetectScreenBlankingRecovery()
         {
