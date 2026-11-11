@@ -3,12 +3,12 @@
   "owner": "N6REJ",
   "repo": "Taskbar-Killer",
   "visibility": "public",
-  "generatedAt": "2026-11-10T14:31:32.229Z",
+  "generatedAt": "2026-11-11T13:46:11.820Z",
   "stats": {
     "total": 87,
     "day": 0,
     "week": 6,
-    "month": 29
+    "month": 28
   },
   "partial": {
     "day": false,
@@ -17,9 +17,9 @@
   },
   "snapshots": {
     "windowDays": 180,
-    "count": 32,
+    "count": 33,
     "firstDate": "2026-10-10",
-    "lastDate": "2026-11-10",
+    "lastDate": "2026-11-11",
     "series": {
       "2026-10-10": 58,
       "2026-10-11": 58,
@@ -52,7 +52,8 @@
       "2026-11-07": 81,
       "2026-11-08": 85,
       "2026-11-09": 87,
-      "2026-11-10": 87
+      "2026-11-10": 87,
+      "2026-11-11": 87
     }
   },
   "profile": {
